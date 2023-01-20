@@ -4,28 +4,56 @@ from tkinter import ttk
 import re
 import datetime
 import jdatetime
+import calendar
 window=Tk()
 window.geometry('350x400')
+window.resizable(0,0)
+window.title('Date Conversion')
+List_Format=["%Y/%m/%d","%A ","%B %d",]
+
+List_Format_Selection=["%Y %m %d","%Y-%m-%d","%Y/%m/%d","%A ","%B %d","%B"]
 
 def gregorian(date):
     if len(date)>4:
         try:
+            sgdate=''
             date=jdatetime.datetime.strptime(date, '%Y-%m-%d').date()
+            leap_jalali=date.isleap()
+            sgdate="{} is leap: {}\n".format(str(date.year),leap_jalali)
             gdate=jdatetime.date(year=date.year,month=date.month,day=date.day).togregorian()
-            show_res.config(text=gdate)
+            sgdate+="{} is leap: {}\n".format(str(gdate.year),calendar.isleap(int(gdate.year)))
+            for item in List_Format:
+                sgdate = '\n'.join([sgdate, gdate.strftime(item)])
+            list_sel=[]
+            for item in List_Format_Selection:
+                list_sel.append(gdate.strftime(item))   
+            copy_format(list_sel) 
+            show_res.config(text=sgdate)
         except:
-            print("Invalid Date")
+            show_res.config(text="Invalid Date")
 
 
 def jalali(date):
     if len(date)>4:
         try:
+            sjdate=''
             date=datetime.datetime.strptime(date, '%Y-%m-%d')
+            sjdate="{} is leap: {}\n".format(str(date.year),calendar.isleap(int(date.year)))
+            print(calendar.isleap(int(date.year)))
             jdate=jdatetime.date.fromgregorian(date=date)
-            show_res.config(text=jdate)
+            sjdate+="{} is leap: {}\n".format(str(jdate.year),jdate.isleap())
+            for item in List_Format:
+                sjdate = '\n'.join([sjdate, jdate.strftime(item)])
+            
+            list_sel=[]
+            for item in List_Format_Selection:
+                list_sel.append(jdate.strftime(item))   
+            copy_format(list_sel) 
+            
+            show_res.config(text=sjdate)
         except:
-            print("Invalid Date")
-
+            show_res.config(text="Invalid Date")
+            
 
 
 def Separation(date):
@@ -77,7 +105,9 @@ def Separation(date):
 
 
 def select_format(sel):
-    print('tesss',format_list.get(format_list.curselection()))
+    if str(format_list.get(format_list.curselection()))!="":
+        window.clipboard_clear()
+        window.clipboard_append(str(format_list.get(format_list.curselection())))
 
 
 
@@ -94,20 +124,18 @@ def only_number(s):
             
 
 
-
-def copy_format():
-    Separation(str(get_datejorg.get()))
+def copy_format(list_date):
+    
     
     format_list.delete(0,END)
-    format= ["C", "C++", "Java", "Python", "R",
-     "Go", "Ruby"]
+    format= list_date
   
     for each_item in range(len(format)):
         format_list.insert(END, format[each_item])
       
       
       
-def get_date():
+def get_date(event):
     date=Separation(str(get_datejorg.get()))
     if date != None:
         if 'jalali' in str(selectin.get()) :
@@ -115,28 +143,37 @@ def get_date():
         elif 'gregorian' in str(selectin.get()) :
             gregorian(date) 
             
+            
+def get_date_butt():
+    get_date('')           
+            
+
+window.bind('<Return>', get_date)
+
+
+
 get_datejorg=Entry(window,width='30')
-get_datejorg.pack()  
+get_datejorg.place(x=55,y=20)
 n = tk.StringVar()
-selectin = ttk.Combobox(window, width = 27, textvariable = n)
+selectin = ttk.Combobox(window,state="readonly", width = 12, textvariable = n)
 
 # Adding combobox drop down list
 selectin['values'] = (' to gregorian', 
                           ' to jalali',
                           )
 
-selectin.pack()
+selectin.place(x=120,y=55)
 selectin.current(1)
 
-
-
-format_list = Listbox(window,height=2, selectmode = "single")
-format_list.pack()
-format_list.bind('<<ListboxSelect>>',select_format)
 show_res=Label(window,text='')
-show_res.pack()
-con=ttk.Button(text='canvert',command=get_date)
-con.pack()
+show_res.place(y=80,x=120)
+
+format_list = Listbox(window,height=5,width=30, selectmode = "single")
+format_list.place(x=55,y=220)
+format_list.bind('<<ListboxSelect>>',select_format)
+
+con=ttk.Button(text='canvert',command=get_date_butt)
+con.place(x=130,y=360)
 
 
 
